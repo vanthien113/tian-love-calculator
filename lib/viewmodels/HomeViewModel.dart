@@ -10,22 +10,36 @@ mixin HomeViewEvent {
   void changeLoadingState(bool isLoading);
 }
 
+enum ValidateName { INVALID_YOUR_NAME, INVALID_YOUR_FRIEND_NAME }
+
 class HomeViewModel extends ChangeNotifier {
   final CalculatorRepository _calculatorRepository = CalculatorRepository();
 
   final _getPercentageBroadcast = StreamController.broadcast();
+  final _loadingBroadcast = StreamController.broadcast();
+  final _errorBroadcast = StreamController.broadcast();
+  final _invalidNameBroadcast = StreamController.broadcast();
 
   Stream getPercentageStream() => _getPercentageBroadcast.stream;
 
-  final _loadingBroadcast = StreamController.broadcast();
-
   Stream getLoadingStream() => _loadingBroadcast.stream;
-
-  final _errorBroadcast = StreamController.broadcast();
 
   Stream errorStream() => _errorBroadcast.stream;
 
+  Stream invalidNameStream() => _invalidNameBroadcast.stream;
   ResponseEntity responseEntityObs = ResponseEntity();
+
+  bool validateInput(String yourName, String yourFriendName) {
+    if (yourName.isEmpty) {
+      _invalidNameBroadcast.add(ValidateName.INVALID_YOUR_NAME);
+      return false;
+    }
+    if (yourFriendName.isEmpty) {
+      _invalidNameBroadcast.add(ValidateName.INVALID_YOUR_FRIEND_NAME);
+      return false;
+    }
+    return true;
+  }
 
   void getPercentage(String yourName, String friendName) {
     _loadingBroadcast.add(true);

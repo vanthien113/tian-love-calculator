@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:love_calculator/models/entities/ResponseEntity.dart';
 import 'package:love_calculator/viewmodels/HomeViewModel.dart';
 import 'package:provider/provider.dart';
@@ -29,6 +30,17 @@ class _HomeScreenState extends State<HomeScreen> {
     _homeViewModel.errorStream().listen((event) {
       _showError(event);
     });
+    _homeViewModel.invalidNameStream().listen((event) {
+      ValidateName state = event;
+      switch (state) {
+        case ValidateName.INVALID_YOUR_FRIEND_NAME:
+          Fluttertoast.showToast(msg: "Please input your girl/boy friend name", toastLength: Toast.LENGTH_SHORT);
+          break;
+        case ValidateName.INVALID_YOUR_NAME:
+          Fluttertoast.showToast(msg: "Please input your name", toastLength: Toast.LENGTH_SHORT);
+          break;
+      }
+    });
   }
 
   @override
@@ -44,24 +56,39 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 SizedBox(
-                  child: TextField(
-                    autofocus: false,
-                    controller: _yourNameController,
-                    decoration:
-                        const InputDecoration(hintText: "Input your name"),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                    child: TextField(
+                      style: const TextStyle(fontSize: 16),
+                      autofocus: false,
+                      controller: _yourNameController,
+                      decoration: const InputDecoration(hintText: "Input your name"),
+                    ),
                   ),
                 ),
                 SizedBox(
-                  child: TextField(
-                    autofocus: false,
-                    controller: _yourFriendNameController,
-                    decoration: const InputDecoration(
-                        hintText: "Input your friend name"),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(15, 0, 15, 0),
+                    child: TextField(
+                      style: const TextStyle(fontSize: 16),
+                      autofocus: false,
+                      controller: _yourFriendNameController,
+                      decoration: const InputDecoration(hintText: "Input your girl/boy friend name"),
+                    ),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () => _onOkClick(),
-                  child: const Text("OK"),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(15, 15, 15, 0),
+                  child: Container(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => _onOkClick(),
+                      child: const Text(
+                        "OK",
+                        style: TextStyle(fontSize: 18),
+                      ),
+                    ),
+                  ),
                 )
               ],
             ),
@@ -71,9 +98,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _onOkClick() async {
-    _homeViewModel.getPercentage(
-        _yourNameController.text, _yourFriendNameController.text);
+  void _onOkClick() {
+    if (_homeViewModel.validateInput(_yourNameController.text, _yourFriendNameController.text)) {
+      _homeViewModel.getPercentage(_yourNameController.text, _yourFriendNameController.text);
+    }
   }
 
   @override
@@ -89,14 +117,30 @@ class _HomeScreenState extends State<HomeScreen> {
         barrierDismissible: false,
         builder: (BuildContext context) => AlertDialog(
               title: const Text('Calculate result'),
-              content: FittedBox(
-                fit: BoxFit.cover,
+              content: SizedBox(
+                height: 45,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Text("Match percentage: ${result.percentage}%",
-                        style: const TextStyle(fontSize: 12)),
-                    Text(result.result.toString(),
-                        style: const TextStyle(fontSize: 12)),
+                    SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        "Match percentage: ${result.percentage}%",
+                        style: const TextStyle(fontSize: 16),
+                        textAlign: TextAlign.left,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Text(result.result.toString(),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            )),
+                      ),
+                    ),
                   ],
                 ),
               ),
